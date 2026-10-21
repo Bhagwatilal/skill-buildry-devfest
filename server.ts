@@ -1,3 +1,4 @@
+import http from 'node:http';
 import express, { Request, Response, NextFunction } from 'express';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -532,11 +533,17 @@ app.get('/api/health', (_req: Request, res: Response) => {
 
 async function startServer() {
   const isProduction = process.env.NODE_ENV === 'production';
+  const httpServer = http.createServer(app);
 
   if (!isProduction) {
     const { createServer: createViteServer } = await import('vite');
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        hmr: {
+          server: httpServer,
+        },
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);
@@ -547,11 +554,30 @@ async function startServer() {
     });
   }
 
-  app.listen(PORT, '0.0.0.0', () => {
-    console.log(`\n  🚀 [Skill Buildry AI] Full-Stack App is ready at:`);
-    console.log(`  > Local:   http://localhost:${PORT}`);
-    console.log(`  > Network: http://127.0.0.1:${PORT}\n`);
+  let currentPort = PORT;
+
+  function listen(port: number) {
+    httpServer.listen(port, '0.0.0.0', () => {
+      console.log(`\n  🚀 [Skill Buildry AI] Full-Stack App is ready at:`);
+      console.log(`  > Local:   http://localhost:${port}`);
+      console.log(`  > Network: http://127.0.0.1:${port}\n`);
+    });
+  }
+
+  httpServer.on('error', (err: any) => {
+    if (err.code === 'EADDRINUSE') {
+      console.warn(`  ⚠️ Port ${currentPort} is busy. Automatically switching to http://localhost:${currentPort + 1}...`);
+      currentPort += 1;
+      setTimeout(() => {
+        listen(currentPort);
+      }, 250);
+    } else {
+      console.error('Server startup error:', err);
+      process.exit(1);
+    }
   });
+
+  listen(currentPort);
 }
 
 startServer().catch((err) => {
