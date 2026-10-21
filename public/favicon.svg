@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <defs>
+    <linearGradient id="sparkle-grad" x1="10" y1="10" x2="54" y2="54" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#FFFFFF"/>
+      <stop offset="35%" stop-color="#E2F86B"/>
+      <stop offset="100%" stop-color="#C5E834"/>
+    </linearGradient>
+    <filter id="glow" x="2" y="2" width="60" height="60" filterUnits="userSpaceOnUse">
+      <feGaussianBlur stdDeviation="1.5" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+  </defs>
+  <!-- Sleek Dark Tile -->
+  <rect width="64" height="64" rx="18" fill="#111215"/>
+  <rect x="1.5" y="1.5" width="61" height="61" rx="16.5" stroke="rgba(255,255,255,0.14)" stroke-width="1.5"/>
+  <!-- Skill Buildry 4-Point Brand Sparkle -->
+  <path d="M32 9C32 21.5 21.5 32 9 32C21.5 32 32 42.5 32 55C32 42.5 42.5 32 55 32C42.5 32 32 21.5 32 9Z" fill="url(#sparkle-grad)" filter="url(#glow)"/>
+</svg>
