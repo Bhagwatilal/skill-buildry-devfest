@@ -344,12 +344,8 @@ function AppContent() {
           defaultMode={authDefaultMode}
           onClose={() => setAuthModalOpen(false)}
           onSuccess={() => {
+            setAuthModalOpen(false);
             setShowStoryLanding(false);
-            if (!profile) {
-              setIsOnboarding(true);
-            } else {
-              setCurrentTab('overview');
-            }
           }}
         />
       </>

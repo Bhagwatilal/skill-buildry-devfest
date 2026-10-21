@@ -45,42 +45,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const login = async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const res = await api.auth.login(email, password);
-      setUser(res.user);
-    } finally {
-      setIsLoading(false);
-    }
+    const res = await api.auth.login(email, password);
+    setUser(res.user);
   };
 
   const register = async (email: string, password: string, name: string) => {
-    setIsLoading(true);
-    try {
-      const res = await api.auth.register(email, password, name);
-      setUser(res.user);
-    } finally {
-      setIsLoading(false);
-    }
+    const res = await api.auth.register(email, password, name);
+    setUser(res.user);
   };
 
   const loginAsDemo = async () => {
-    setIsLoading(true);
-    try {
-      const res = await api.auth.loginAsDemo();
-      setUser(res.user);
-    } finally {
-      setIsLoading(false);
-    }
+    const res = await api.auth.loginAsDemo();
+    setUser(res.user);
   };
 
   const logout = async () => {
-    setIsLoading(true);
     try {
       await api.auth.logout();
-      setUser(null);
     } finally {
-      setIsLoading(false);
+      setUser(null);
     }
   };
 
