@@ -51,6 +51,9 @@ import type {
 import { calculateCareerReadiness, getTodaySprintTasks } from '../utils/scoring.ts';
 import { getSavedGoalRewards, saveGoalRewards } from '../utils/rewards.ts';
 import type { NavTab } from '../components/layout/AppSidebar.tsx';
+import { DynamicVelocityChart } from '../components/charts/DynamicVelocityChart.tsx';
+import { SkillRadarChart } from '../components/charts/SkillRadarChart.tsx';
+import { TECHNOLOGY_TRACKS, getTrack } from '../data/technologyTracks.ts';
 
 interface DashboardPageProps {
   user: User | null;
@@ -165,6 +168,15 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
     { day: '4 Jul', opsHeight: 40, transferHeight: 25, targetHeight: 70, dot: true, badge: null, active: false },
   ];
 
+  // Find active track for metrics
+  const activeTrack = Object.values(TECHNOLOGY_TRACKS).find(
+    (t) => t.profile.targetRole.toLowerCase() === profile?.targetRole?.toLowerCase()
+  ) || TECHNOLOGY_TRACKS.flutter;
+
+  const advancedSkillsCount = skills.filter((s) => s.selfAssessedLevel === 'Advanced' || s.selfAssessedLevel === 'Expert').length;
+  const coverageScore = Math.min(1000, Math.round((Math.max(advancedSkillsCount, 1) / Math.max(skills.length, 1)) * 1000));
+  const coveragePct = Math.min(100, Math.round((skills.filter((s) => s.selfAssessedLevel !== 'None').length / Math.max(skills.length, 1)) * 100));
+
   return (
     <div className="space-y-6">
       {/* TOP ROW: 3 BENTO CARDS MATCHING TEMPLATE */}
@@ -193,12 +205,12 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
             <div className="mt-4 flex items-baseline justify-between">
               <div className="flex items-baseline gap-1">
                 <span className="text-4xl sm:text-5xl font-extrabold tracking-tight text-[#111215]">
-                  780
+                  {coverageScore}
                 </span>
                 <span className="text-xs text-slate-400 font-semibold">/ 1000</span>
               </div>
               <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#EBFD7A] text-[#283500] text-[10px] font-bold border border-[#D8EE60]">
-                82% ◯
+                {coveragePct}% ◯
               </span>
             </div>
           </div>
@@ -206,16 +218,20 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
           {/* Capsule Segmented Progress Bar (8 vertical capsule pills) */}
           <div className="mt-6 pt-3">
             <div className="capsule-pill-track justify-between">
-              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
-                <div
-                  key={i}
-                  className={`capsule-pill-segment ${
-                    i <= 5
-                      ? 'bg-[#121417]'
-                      : 'border-2 border-dashed border-slate-300 bg-slate-50'
-                  }`}
-                />
-              ))}
+              {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => {
+                const filledPills = Math.round((coveragePct / 100) * 8);
+                const isFilled = i <= filledPills;
+                return (
+                  <div
+                    key={i}
+                    className={`capsule-pill-segment ${
+                      isFilled
+                        ? 'bg-[#121417]'
+                        : 'border-2 border-dashed border-slate-300 bg-slate-50'
+                    }`}
+                  />
+                );
+              })}
             </div>
           </div>
         </div>
@@ -307,103 +323,11 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
         {/* Left 8 Cols: Dual-Color Capsule Bar Chart & Sprint Tasks */}
         <div className="lg:col-span-8 space-y-5">
-          {/* Main Statistics Chart Card */}
-          <div className="bento-card-white p-6 space-y-6">
-            {/* Header with Title, Legend & Year Pill */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-2">
-                <div className="w-7 h-7 rounded-full bg-slate-100 flex items-center justify-center text-slate-700">
-                  <BarChart3 className="w-3.5 h-3.5" />
-                </div>
-                <h3 className="text-base font-bold text-[#111215]">Statistics</h3>
-              </div>
-
-              {/* Legend & Year Dropdown */}
-              <div className="flex items-center gap-4 text-xs font-medium text-slate-600">
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#121417]" />
-                  <span>Roadmap Tasks</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="w-2.5 h-2.5 rounded-full bg-[#E2F86B] border border-[#C5DF4B]" />
-                  <span>Evidence Proof</span>
-                </div>
-                <div className="px-3 py-1 rounded-full bg-slate-100 text-slate-800 text-xs font-semibold">
-                  2026 ⌵
-                </div>
-              </div>
-            </div>
-
-            {/* Signature Dual-Color Capsule Bar Chart matching the template */}
-            <div className="relative pt-6 pb-2">
-              {/* Y-Axis Guidelines & Labels */}
-              <div className="absolute inset-x-0 inset-y-0 flex flex-col justify-between pointer-events-none text-[10px] text-slate-400 font-mono pr-4">
-                {[1.0, 0.8, 0.6, 0.4, 0.2, 0.1].map((val) => (
-                  <div key={val} className="flex items-center gap-3">
-                    <span className="w-5 text-right">{val.toFixed(1)}</span>
-                    <div className="flex-1 border-b border-dashed border-slate-100" />
-                  </div>
-                ))}
-              </div>
-
-              {/* 8 Columns with Dual-Color Capsule Bars */}
-              <div className="relative z-10 grid grid-cols-8 gap-2 sm:gap-3 pl-8 pr-2 h-56 items-end">
-                {chartDays.map((item, idx) => (
-                  <div key={idx} className="flex flex-col items-center h-full justify-end group">
-                    {/* Dotted Target Line with circle top */}
-                    {item.targetHeight > 0 && (
-                      <div
-                        className="w-0.5 border-l-2 border-dashed border-slate-300 relative"
-                        style={{ height: `${item.targetHeight}%` }}
-                      >
-                        {/* Target Circle Node at top of dotted line */}
-                        <div className="absolute -top-1 -left-[5px] w-3 h-3 rounded-full border-2 border-slate-300 bg-white" />
-                      </div>
-                    )}
-
-                    {/* Stacked Capsule Bars */}
-                    {item.opsHeight > 0 && (
-                      <div className="w-5 sm:w-6 flex flex-col items-center gap-0.5 relative -mt-3">
-                        {/* Floating Percentage Badge on active column */}
-                        {item.badge && (
-                          <div className="absolute -top-6 px-1.5 py-0.5 rounded-full bg-[#121417] text-white text-[9px] font-bold shadow-xs whitespace-nowrap">
-                            {item.badge}
-                          </div>
-                        )}
-
-                        {/* Top Black Capsule */}
-                        <div
-                          className="w-full bg-[#121417] rounded-full flex items-center justify-center text-white text-[8px] transition-all"
-                          style={{ height: `${item.opsHeight * 1.6}px` }}
-                        >
-                          {item.dot && <span className="w-1.5 h-1.5 rounded-full bg-white" />}
-                        </div>
-
-                        {/* Bottom Acid Lime Capsule */}
-                        <div
-                          className="w-full bg-[#E2F86B] border border-[#CCE855] rounded-full flex items-center justify-center text-[#111215] text-[8px] transition-all"
-                          style={{ height: `${item.transferHeight * 1.6}px` }}
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-[#111215]" />
-                        </div>
-                      </div>
-                    )}
-
-                    {/* X-Axis Date Label */}
-                    <span
-                      className={`text-[10px] mt-3 whitespace-nowrap transition-colors ${
-                        item.active
-                          ? 'font-bold text-[#111215] bg-[#E2F86B] px-1.5 py-0.2 rounded-md'
-                          : 'text-slate-400 font-medium'
-                      }`}
-                    >
-                      {item.day}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
+          {/* Dynamic Velocity & Sprint Statistics Chart */}
+          <DynamicVelocityChart
+            tasks={tasks}
+            onNavigateToRoadmap={() => onNavigate('roadmap')}
+          />
 
           {/* Today's Sprint Tasks Checklist (matching template styling) */}
           <div className="bento-card-white p-6 space-y-4">
@@ -485,6 +409,13 @@ export const DashboardPage: React.FC<DashboardPageProps> = ({
 
         {/* Right 4 Cols: Quick Access Tiles & Resource Stack matching template */}
         <div className="lg:col-span-4 space-y-4">
+          {/* Interactive Skill Radar Spider Web Chart */}
+          <SkillRadarChart
+            metrics={activeTrack.radarMetrics}
+            title={`${activeTrack.name.split(' ')[0]} Radar`}
+            subtitle={`${activeTrack.profile.targetRole} Benchmark`}
+          />
+
           {/* Milestone Bounties & Self-Rewards Widget */}
           <div className="bento-card-white p-5 space-y-3.5 shadow-sm relative overflow-hidden">
             <div className="flex items-center justify-between">

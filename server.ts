@@ -172,6 +172,29 @@ app.get('/api/auth/me', (req: AuthenticatedRequest, res: Response) => {
   res.json({ authenticated: true, user: req.user });
 });
 
+// ----------------- Technology Tracks API -----------------
+
+app.get('/api/tracks', (_req: Request, res: Response) => {
+  res.json({
+    activeTrackId: 'flutter',
+    tracks: [
+      { id: 'flutter', name: 'Flutter & Dart Mobile Architecture', badge: '📱 Mobile', category: 'Mobile Engineering', tagline: 'High-performance cross-platform iOS & Android mobile applications' },
+      { id: 'fullstack', name: 'Full-Stack Web (React, Next.js & Node)', badge: '🌐 Full-Stack', category: 'Web Engineering', tagline: 'Modern production full-stack engineering with React 19, TypeScript, Next.js' },
+      { id: 'ai', name: 'AI & Generative AI Systems Engineer', badge: '🤖 AI & GenAI', category: 'Artificial Intelligence', tagline: 'Production Generative AI applications with Gemini 1.5/2.0 API and RAG' },
+      { id: 'devops', name: 'Cloud & DevOps Platform Engineer', badge: '☁️ Cloud & DevOps', category: 'Infrastructure & Platform', tagline: 'Automated GitOps pipelines, Kubernetes container orchestration, and Terraform' },
+      { id: 'backend', name: 'High-Throughput Backend & Systems (Go)', badge: '⚡ Backend & Go', category: 'Systems Engineering', tagline: 'Concurrent microservices, gRPC protocols, and Kafka streaming architectures' },
+    ],
+  });
+});
+
+app.post('/api/tracks/switch', (req: AuthenticatedRequest, res: Response) => {
+  const trackId = req.body.trackId || 'flutter';
+  res.json({
+    success: true,
+    activeTrackId: trackId,
+  });
+});
+
 // ----------------- Profile & Skills Endpoints -----------------
 
 app.get('/api/profile', requireAuth, (req: AuthenticatedRequest, res: Response) => {

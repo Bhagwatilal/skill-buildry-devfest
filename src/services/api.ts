@@ -257,6 +257,30 @@ export const api = {
     },
   },
 
+  // Tracks & Multi-Tech Switcher
+  tracks: {
+    async getTracks() {
+      return request<{
+        activeTrackId: string;
+        tracks: Array<{ id: string; name: string; badge: string; category: string; tagline: string }>;
+      }>('/api/tracks');
+    },
+    async switchTrack(trackId: string) {
+      return request<{
+        success: boolean;
+        activeTrackId: string;
+        profile: Profile;
+        skills: SkillItem[];
+        gapAnalysis: GapAnalysis;
+        roadmap: Roadmap;
+        projects: ProjectRecommendation[];
+      }>('/api/tracks/switch', {
+        method: 'POST',
+        body: JSON.stringify({ trackId }),
+      });
+    },
+  },
+
   settings: {
     async resetDemo() {
       return request<{ success: boolean; message: string }>('/api/settings/reset-demo', {

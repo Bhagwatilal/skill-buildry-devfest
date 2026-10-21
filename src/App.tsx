@@ -60,9 +60,50 @@ function AppContent() {
   // Toast State
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Active Technology Track (Default to Flutter or saved track)
+  const [currentTrackId, setCurrentTrackId] = useState<string>(() => {
+    try {
+      return localStorage.getItem('sb_current_track_id') || 'flutter';
+    } catch {
+      return 'flutter';
+    }
+  });
+
   const showToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => setToastMessage(null), 3500);
+  };
+
+  // Switch Active Career Track & Tech Stack
+  const handleSwitchTrack = async (trackId: string) => {
+    setDataLoading(true);
+    try {
+      setCurrentTrackId(trackId);
+      const res = await api.tracks.switchTrack(trackId);
+      setProfile(res.profile);
+      setSkills(res.skills);
+      setGapAnalysis(res.gapAnalysis);
+      setRoadmap(res.roadmap);
+      setProjects(res.projects);
+
+      // Refresh auxiliary data
+      const [evRes, qRes, attRes, evtsRes] = await Promise.all([
+        api.evidence.getAll().catch(() => ({ evidence: [] })),
+        api.interview.getQuestions().catch(() => ({ questions: [] })),
+        api.interview.getAttempts().catch(() => ({ attempts: [] })),
+        api.progress.getEvents().catch(() => ({ events: [] })),
+      ]);
+      setEvidence(evRes.evidence || []);
+      setInterviewQuestions(qRes.questions || []);
+      setInterviewAttempts(attRes.attempts || []);
+      setProgressEvents(evtsRes.events || []);
+
+      showToast(`Switched career track to ${res.profile.targetRole}!`);
+    } catch (err: any) {
+      showToast(err.message || 'Failed to switch track');
+    } finally {
+      setDataLoading(false);
+    }
   };
 
   // Fetch full application state when user changes
@@ -399,6 +440,8 @@ function AppContent() {
           onContinueLearning={currentTab === 'overview' ? () => setCurrentTab('roadmap') : undefined}
           isAnalyzing={isAnalyzing}
           onOpenStory={() => setShowStoryLanding(true)}
+          currentTrackId={currentTrackId}
+          onSwitchTrack={handleSwitchTrack}
         />
 
           <main className="flex-1 w-full pt-1">
@@ -490,6 +533,8 @@ function AppContent() {
                   profile={profile}
                   onUpdateProfile={handleUpdateProfile}
                   onResetComplete={loadAppData}
+                  currentTrackId={currentTrackId}
+                  onSwitchTrack={handleSwitchTrack}
                 />
               )}
             </>

@@ -12,8 +12,14 @@ import {
   Layers,
   ChevronDown,
   ChevronUp,
+  Radar,
+  GitBranch,
+  TableProperties,
 } from 'lucide-react';
 import type { GapAnalysis, GapSkill, Profile } from '../types/index.ts';
+import { SkillRadarChart } from '../components/charts/SkillRadarChart.tsx';
+import { SkillDependencyGraph } from '../components/charts/SkillDependencyGraph.tsx';
+import { TECHNOLOGY_TRACKS } from '../data/technologyTracks.ts';
 
 interface SkillGapPageProps {
   analysis: GapAnalysis | null;
@@ -32,6 +38,12 @@ export const SkillGapPage: React.FC<SkillGapPageProps> = ({
 }) => {
   const [filter, setFilter] = useState<'All' | 'High Priority' | 'Needs Improvement' | 'Strong Foundation'>('All');
   const [selectedSkill, setSelectedSkill] = useState<GapSkill | null>(null);
+  const [viewMode, setViewMode] = useState<'matrix' | 'radar' | 'dag'>('matrix');
+
+  // Find active track for graph data
+  const activeTrack = Object.values(TECHNOLOGY_TRACKS).find(
+    (t) => t.profile.targetRole.toLowerCase() === profile?.targetRole?.toLowerCase()
+  ) || TECHNOLOGY_TRACKS.flutter;
 
   const skillsList = analysis?.skills || [];
   const filteredSkills = skillsList.filter((s) => {
@@ -65,14 +77,16 @@ export const SkillGapPage: React.FC<SkillGapPageProps> = ({
           </p>
         </div>
 
-        <button
-          onClick={onRefreshAnalysis}
-          disabled={isAnalyzing}
-          className="flex items-center justify-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-xs disabled:opacity-50 transition-all shrink-0 cursor-pointer active:scale-95"
-        >
-          <RefreshCw className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
-          <span>{isAnalyzing ? 'Analyzing...' : 'Update Analysis'}</span>
-        </button>
+        <div className="flex items-center gap-2.5 shrink-0">
+          <button
+            onClick={onRefreshAnalysis}
+            disabled={isAnalyzing}
+            className="flex items-center justify-center gap-2 px-5 py-2.5 text-xs sm:text-sm font-semibold text-white bg-slate-900 hover:bg-slate-800 rounded-xl shadow-xs disabled:opacity-50 transition-all shrink-0 cursor-pointer active:scale-95"
+          >
+            <RefreshCw className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
+            <span>{isAnalyzing ? 'Analyzing...' : 'Update Analysis'}</span>
+          </button>
+        </div>
       </div>
 
       {/* Metric Counters */}
@@ -102,129 +116,196 @@ export const SkillGapPage: React.FC<SkillGapPageProps> = ({
         </div>
       </div>
 
-      {/* Filter Tabs */}
-      <div className="flex gap-2 border-b border-slate-200/60 pb-3 overflow-x-auto">
-        {(['All', 'High Priority', 'Needs Improvement', 'Strong Foundation'] as const).map((tab) => (
+      {/* View Mode Switcher + Filter Tabs */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200/60 pb-3">
+        {/* View Mode Chips (Matrix vs Radar vs DAG) */}
+        <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-2xl w-fit">
           <button
-            key={tab}
-            onClick={() => setFilter(tab)}
-            className={`px-3.5 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 cursor-pointer ${
-              filter === tab
-                ? 'bg-slate-900 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
+            onClick={() => setViewMode('matrix')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              viewMode === 'matrix'
+                ? 'bg-white text-slate-900 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            {tab}
+            <TableProperties className="w-3.5 h-3.5" />
+            <span>Table Matrix</span>
           </button>
-        ))}
-      </div>
 
-      {/* Comparison Table / Cards */}
-      <div className="space-y-3">
-        {filteredSkills.length === 0 ? (
-          <div className="p-8 text-center glass-panel rounded-3xl border border-slate-200/70 text-xs text-slate-500">
-            No skills match the selected filter.
-          </div>
-        ) : (
-          filteredSkills.map((item, idx) => {
-            const isSelected = selectedSkill?.name === item.name;
-            return (
-              <div
-                key={idx}
-                className={`rounded-3xl border transition-all glass-card ${
-                  item.priority === 'High Priority'
-                    ? 'border-rose-200/80 bg-rose-50/15 hover:border-rose-300'
-                    : item.priority === 'Needs Improvement'
-                    ? 'border-amber-200/80 bg-amber-50/15 hover:border-amber-300'
-                    : 'border-emerald-200/80 bg-emerald-50/15 hover:border-emerald-300'
+          <button
+            onClick={() => setViewMode('radar')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              viewMode === 'radar'
+                ? 'bg-white text-slate-900 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <Radar className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Spider Radar Graph</span>
+          </button>
+
+          <button
+            onClick={() => setViewMode('dag')}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              viewMode === 'dag'
+                ? 'bg-white text-slate-900 shadow-xs'
+                : 'text-slate-600 hover:text-slate-900'
+            }`}
+          >
+            <GitBranch className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Dependency Tree (DAG)</span>
+          </button>
+        </div>
+
+        {/* Priority Filter Tabs (Only shown in Matrix mode) */}
+        {viewMode === 'matrix' && (
+          <div className="flex gap-2 overflow-x-auto no-scrollbar">
+            {(['All', 'High Priority', 'Needs Improvement', 'Strong Foundation'] as const).map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setFilter(tab)}
+                className={`px-3 py-1.5 text-xs font-semibold rounded-xl transition-all shrink-0 cursor-pointer ${
+                  filter === tab
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80'
                 }`}
               >
-                {/* Main Row */}
-                <div
-                  onClick={() => setSelectedSkill(isSelected ? null : item)}
-                  className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer"
-                >
-                  <div className="space-y-1 min-w-0 flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="font-bold text-slate-900 text-sm sm:text-base">{item.name}</span>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">
-                        {item.category}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-500 line-clamp-1">{item.rationale}</p>
-                  </div>
-
-                  {/* Level Comparison Columns */}
-                  <div className="flex items-center gap-4 sm:gap-6 shrink-0 text-xs">
-                    <div>
-                      <div className="text-[10px] text-slate-400 font-medium uppercase">Current</div>
-                      <div className="font-semibold text-slate-700">{item.currentLevel}</div>
-                    </div>
-
-                    <ArrowRight className="w-3.5 h-3.5 text-slate-300 hidden sm:block" />
-
-                    <div>
-                      <div className="text-[10px] text-slate-400 font-medium uppercase">Expected</div>
-                      <div className="font-semibold text-indigo-600">{item.expectedLevel}</div>
-                    </div>
-
-                    <div className="min-w-28 text-right">
-                      <span
-                        className={`inline-block px-2.5 py-1 text-[11px] font-semibold rounded-lg ${
-                          item.priority === 'High Priority'
-                            ? 'bg-rose-50 text-rose-700 border border-rose-200/70'
-                            : item.priority === 'Needs Improvement'
-                            ? 'bg-amber-50 text-amber-700 border border-amber-200/70'
-                            : 'bg-emerald-50 text-emerald-700 border border-emerald-200/70'
-                        }`}
-                      >
-                        {item.priority}
-                      </span>
-                    </div>
-
-                    <div className="text-slate-400">
-                      {isSelected ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Expanded Detail Panel */}
-                {isSelected && (
-                  <div className="px-5 pb-5 pt-3 border-t border-slate-200/60 bg-white/60 rounded-b-3xl space-y-3 text-xs">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <div className="font-bold text-slate-700 uppercase tracking-wider text-[10px] mb-1">
-                          Why this gap matters in interviews
-                        </div>
-                        <p className="text-slate-600 leading-relaxed">{item.rationale}</p>
-                      </div>
-
-                      <div>
-                        <div className="font-bold text-indigo-600 uppercase tracking-wider text-[10px] mb-1">
-                          Recommended Action to Close Gap
-                        </div>
-                        <p className="text-slate-600 leading-relaxed">{item.suggestedAction}</p>
-                      </div>
-                    </div>
-
-                    {onNavigateToRoadmap && (
-                      <div className="pt-2 flex justify-end">
-                        <button
-                          onClick={onNavigateToRoadmap}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl shadow-xs transition-colors cursor-pointer"
-                        >
-                          <span>View Roadmap Sprint Tasks</span>
-                          <ArrowRight className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            );
-          })
+                {tab}
+              </button>
+            ))}
+          </div>
         )}
       </div>
+
+      {/* VIEW 1: SPIDER RADAR GRAPH */}
+      {viewMode === 'radar' && (
+        <div className="space-y-6 animate-fade-in">
+          <SkillRadarChart
+            metrics={activeTrack.radarMetrics}
+            title={`${activeTrack.name} Competency Spider Graph`}
+            subtitle="Normalized 6-axis assessment of your current skills compared against mid-level production standards."
+          />
+        </div>
+      )}
+
+      {/* VIEW 2: DEPENDENCY TREE (DAG) */}
+      {viewMode === 'dag' && (
+        <div className="space-y-6 animate-fade-in">
+          <SkillDependencyGraph
+            nodes={activeTrack.dependencyNodes}
+            onSelectNode={() => {}}
+          />
+        </div>
+      )}
+
+      {/* VIEW 3: TABLE COMPARISON MATRIX */}
+      {viewMode === 'matrix' && (
+        <div className="space-y-3 animate-fade-in">
+          {filteredSkills.length === 0 ? (
+            <div className="p-8 text-center glass-panel rounded-3xl border border-slate-200/70 text-xs text-slate-500">
+              No skills match the selected filter.
+            </div>
+          ) : (
+            filteredSkills.map((item, idx) => {
+              const isSelected = selectedSkill?.name === item.name;
+              return (
+                <div
+                  key={idx}
+                  className={`rounded-3xl border transition-all glass-card ${
+                    item.priority === 'High Priority'
+                      ? 'border-rose-200/80 bg-rose-50/15 hover:border-rose-300'
+                      : item.priority === 'Needs Improvement'
+                      ? 'border-amber-200/80 bg-amber-50/15 hover:border-amber-300'
+                      : 'border-emerald-200/80 bg-emerald-50/15 hover:border-emerald-300'
+                  }`}
+                >
+                  {/* Main Row */}
+                  <div
+                    onClick={() => setSelectedSkill(isSelected ? null : item)}
+                    className="p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 cursor-pointer"
+                  >
+                    <div className="space-y-1 min-w-0 flex-1">
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-slate-900 text-sm sm:text-base">{item.name}</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 font-medium">
+                          {item.category}
+                        </span>
+                      </div>
+                      <p className="text-xs text-slate-500 line-clamp-1">{item.rationale}</p>
+                    </div>
+
+                    {/* Level Comparison Columns */}
+                    <div className="flex items-center gap-4 sm:gap-6 shrink-0 text-xs">
+                      <div>
+                        <div className="text-[10px] text-slate-400 font-medium uppercase">Current</div>
+                        <div className="font-semibold text-slate-700">{item.currentLevel}</div>
+                      </div>
+
+                      <ArrowRight className="w-3.5 h-3.5 text-slate-300 hidden sm:block" />
+
+                      <div>
+                        <div className="text-[10px] text-slate-400 font-medium uppercase">Expected</div>
+                        <div className="font-semibold text-indigo-600">{item.expectedLevel}</div>
+                      </div>
+
+                      <div className="min-w-28 text-right">
+                        <span
+                          className={`inline-block px-2.5 py-1 text-[11px] font-semibold rounded-lg ${
+                            item.priority === 'High Priority'
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200/70'
+                              : item.priority === 'Needs Improvement'
+                              ? 'bg-amber-50 text-amber-700 border border-amber-200/70'
+                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200/70'
+                          }`}
+                        >
+                          {item.priority}
+                        </span>
+                      </div>
+
+                      <div className="text-slate-400">
+                        {isSelected ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Expanded Detail Panel */}
+                  {isSelected && (
+                    <div className="px-5 pb-5 pt-3 border-t border-slate-200/60 bg-white/60 rounded-b-3xl space-y-3 text-xs">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <div className="font-bold text-slate-700 uppercase tracking-wider text-[10px] mb-1">
+                            Why this gap matters in interviews
+                          </div>
+                          <p className="text-slate-600 leading-relaxed">{item.rationale}</p>
+                        </div>
+
+                        <div>
+                          <div className="font-bold text-indigo-600 uppercase tracking-wider text-[10px] mb-1">
+                            Recommended Action to Close Gap
+                          </div>
+                          <p className="text-slate-600 leading-relaxed">{item.suggestedAction}</p>
+                        </div>
+                      </div>
+
+                      {onNavigateToRoadmap && (
+                        <div className="pt-2 flex justify-end">
+                          <button
+                            onClick={onNavigateToRoadmap}
+                            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:text-slate-900 bg-white hover:bg-slate-50 border border-slate-200/80 rounded-xl shadow-xs transition-colors cursor-pointer"
+                          >
+                            <span>View Roadmap Sprint Tasks</span>
+                            <ArrowRight className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              );
+            })
+          )}
+        </div>
+      )}
     </div>
   );
 };

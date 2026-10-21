@@ -2,6 +2,7 @@ import React from 'react';
 import { Menu, Settings, Plus, Sparkles, RefreshCw, Cpu, Layers } from 'lucide-react';
 import type { NavTab } from './AppSidebar.tsx';
 import type { Profile } from '../../types/index.ts';
+import { TrackSelector } from '../common/TrackSelector.tsx';
 
 interface TopbarProps {
   currentTab: NavTab;
@@ -12,6 +13,8 @@ interface TopbarProps {
   onContinueLearning?: () => void;
   isAnalyzing?: boolean;
   onOpenStory?: () => void;
+  currentTrackId?: string;
+  onSwitchTrack?: (trackId: string) => void;
 }
 
 export const Topbar: React.FC<TopbarProps> = ({
@@ -23,6 +26,8 @@ export const Topbar: React.FC<TopbarProps> = ({
   onContinueLearning,
   isAnalyzing,
   onOpenStory,
+  currentTrackId = 'flutter',
+  onSwitchTrack,
 }) => {
   const tabs: Array<{ id: NavTab; label: string }> = [
     { id: 'overview', label: 'Overview' },
@@ -67,7 +72,15 @@ export const Topbar: React.FC<TopbarProps> = ({
         </div>
 
         {/* Right Action Controls from Template */}
-        <div className="flex items-center gap-2.5 shrink-0 self-start md:self-center">
+        <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-start md:self-center">
+          {/* Tech Track Selector Dropdown */}
+          {onSwitchTrack && (
+            <TrackSelector
+              currentTrackId={currentTrackId}
+              onSelectTrack={onSwitchTrack}
+            />
+          )}
+
           {/* 3D Story & Vision Button */}
           {onOpenStory && (
             <button
