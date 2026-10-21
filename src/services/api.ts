@@ -12,6 +12,8 @@ import type {
   ProgressHistoryEvent,
 } from '../types/index.ts';
 
+import { handleClientFallback } from './clientFallback.ts';
+
 const TOKEN_KEY = 'skillsprint_auth_token';
 
 export function getStoredToken(): string | null {
@@ -35,24 +37,44 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  // Target backend server on 5000 if accessed from another port (e.g. 5173 or 3000)
+  // Target backend server on 5000 if accessed from another port locally (e.g. 5173 or 3000)
   let url = endpoint;
   if (typeof window !== 'undefined' && window.location.port !== '5000' && window.location.hostname === 'localhost') {
     url = `http://localhost:5000${endpoint}`;
   }
 
-  const res = await fetch(url, {
-    ...options,
-    headers,
-  });
+  try {
+    const res = await fetch(url, {
+      ...options,
+      headers,
+    });
 
-  const data = await res.json().catch(() => ({}));
+    const contentType = res.headers.get('content-type') || '';
+    const isHtml = contentType.includes('text/html');
 
-  if (!res.ok) {
-    throw new Error(data.error || `HTTP error ${res.status}: ${res.statusText}`);
+    // If backend returns 404/405/HTML (typical of static host SPA rewrites on Vercel) or server error, fall back to client store
+    if (res.status === 404 || res.status === 405 || isHtml || (res.status >= 500 && window.location.hostname !== 'localhost')) {
+      console.info(`[Skill Buildry] Backend endpoint ${endpoint} (status ${res.status}, html: ${isHtml}). Using client store.`);
+      return handleClientFallback(endpoint, options) as T;
+    }
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      // If deployed on remote host and request failed, gracefully use client store instead of breaking
+      if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
+        console.warn(`[Skill Buildry] Non-OK response on remote host for ${endpoint}. Using client store.`);
+        return handleClientFallback(endpoint, options) as T;
+      }
+      throw new Error(data.error || `HTTP error ${res.status}: ${res.statusText}`);
+    }
+
+    return data as T;
+  } catch (err: any) {
+    // If network failure or backend unreachable (e.g. static hosting on Vercel/Netlify), use client store
+    console.warn(`[Skill Buildry] Request error for ${endpoint}. Falling back to client store.`, err);
+    return handleClientFallback(endpoint, options) as T;
   }
-
-  return data as T;
 }
 
 export const api = {
