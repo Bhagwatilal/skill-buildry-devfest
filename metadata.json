@@ -1,0 +1,8 @@
+{
+  "name": "SkillSprint AI",
+  "description": "AI-powered career development platform turning skill gaps into verifiable proof with personalized roadmaps, practical projects, and interview prep.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
