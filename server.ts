@@ -17,6 +17,17 @@ const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
 
 app.use(express.json());
 
+// Enable CORS for all ports (e.g. 5173, 3000, 5000)
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, x-session-token');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 // Auth extraction middleware
 interface AuthenticatedRequest extends Request {
   user?: {

@@ -35,7 +35,13 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     headers.set('Authorization', `Bearer ${token}`);
   }
 
-  const res = await fetch(endpoint, {
+  // Target backend server on 5000 if accessed from another port (e.g. 5173 or 3000)
+  let url = endpoint;
+  if (typeof window !== 'undefined' && window.location.port !== '5000' && window.location.hostname === 'localhost') {
+    url = `http://localhost:5000${endpoint}`;
+  }
+
+  const res = await fetch(url, {
     ...options,
     headers,
   });
