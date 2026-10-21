@@ -176,7 +176,7 @@ npm start
 
 To test the application immediately without registration:
 1. Click **"Explore Demo"** on the landing page or in the Sign In dialog.
-2. Automatically logs into the pre-seeded **Alex Chen** profile:
+2. Automatically logs into the pre-seeded **Bhagwatilal Joshi** profile:
    - **Target Role:** Flutter Developer (Mid-Level)
    - **Pre-analyzed Gaps:** Automated Testing, Riverpod State, CI/CD pipelines.
    - **Roadmap:** 5 structured tasks with acceptance criteria.

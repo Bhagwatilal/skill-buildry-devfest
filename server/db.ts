@@ -763,11 +763,11 @@ export function getProgressEvents(userId: string) {
 
 // Demo account seeder
 export function seedDemoData() {
-  const demoEmail = 'alex.chen@skillsprint.demo';
+  const demoEmail = 'bhagwatilal.joshi@skillsprint.demo';
   let demoUser = getUserByEmail(demoEmail);
 
   if (!demoUser) {
-    const user = createUser(demoEmail, 'demopassword123', 'Alex Chen');
+    const user = createUser(demoEmail, 'demopassword123', 'Bhagwatilal Joshi');
     demoUser = getUserByEmail(demoEmail)!;
   }
 
@@ -784,10 +784,10 @@ export function seedDemoData() {
       studyDaysPerWeek: 5,
       targetTimelineWeeks: 10,
       learningStyle: 'hands-on',
-      githubUrl: 'https://github.com/alexchen-dev',
-      portfolioUrl: 'https://alexchen.dev',
-      linkedinUrl: 'https://linkedin.com/in/alexchen-dev',
-      bio: 'Junior mobile developer with hands-on Dart & Flutter experience looking to level up in testing, state architecture, and CI/CD for product companies.',
+      githubUrl: 'https://github.com/Bhagwatilal',
+      portfolioUrl: 'https://bhagwatilal.dev',
+      linkedinUrl: 'https://linkedin.com/in/bhagwatilal',
+      bio: 'Software engineer and Flutter developer with hands-on experience looking to level up in testing, state architecture, and CI/CD for product companies.',
     });
 
     // Seed Skills

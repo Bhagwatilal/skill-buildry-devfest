@@ -307,7 +307,7 @@ function AppContent() {
       <>
         <LandingPage
           isLoggedIn={Boolean(user)}
-          userName={user?.name || 'Alex Chen'}
+          userName={user?.name || 'Bhagwatilal Joshi'}
           userEmail={user?.email || ''}
           onLogout={logout}
           onStartOnboarding={() => {

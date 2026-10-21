@@ -100,7 +100,7 @@ export const AuthModal: React.FC<AuthModalProps> = ({
               <Sparkles className="w-3.5 h-3.5 text-[#1A2200]" />
               <span>Instant Interactive Demo</span>
             </div>
-            <p className="text-[11px] text-[#283500]">Log in as Alex Chen (Flutter Developer)</p>
+            <p className="text-[11px] text-[#283500]">Log in as Bhagwatilal Joshi (Flutter Developer)</p>
           </div>
           <button
             type="button"

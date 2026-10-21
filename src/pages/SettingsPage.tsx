@@ -252,7 +252,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
           <div>
             <div className="text-xs font-bold text-[#111215]">Reset Demo Showcase Data</div>
             <p className="text-[11px] text-slate-500">
-              Restores the curated Alex Chen Flutter Developer profile for live demonstrations.
+              Restores the curated Bhagwatilal Joshi Flutter Developer profile for live demonstrations.
             </p>
           </div>
 
@@ -293,7 +293,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
             <h3 className="text-lg font-black text-slate-900 mb-2">Reset Demo Data?</h3>
             <p className="text-xs text-slate-600 leading-relaxed mb-5">
-              This will reseed the database to the default Alex Chen Flutter Developer profile,
+              This will reseed the database to the default Bhagwatilal Joshi Flutter Developer profile,
               re-populating the roadmap tasks, project challenges, and initial evidence records.
             </p>
 

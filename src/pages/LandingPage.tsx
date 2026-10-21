@@ -181,7 +181,7 @@ const faqItems = [
 /* ─── COMPONENT ──────────────────────────────────────────────────────────── */
 export const LandingPage: React.FC<LandingPageProps> = ({
   onStartOnboarding, onExploreDemo, onOpenAuth, onEnterWorkspace, onLogout,
-  isLoggedIn = false, userName = 'Alex Chen',
+  isLoggedIn = false, userName = 'Bhagwatilal Joshi',
 }) => {
   const [activeTrack, setActiveTrack] = useState(0);
   const [activeTesti, setActiveTesti] = useState(0);
